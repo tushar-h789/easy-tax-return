@@ -1,0 +1,618 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum ResidentialStatus {
+  RESIDENT
+  NON_RESIDENT
+}
+
+enum AssesseeStatus {
+  INDIVIDUAL
+  FIRM
+  HINDU_UNDEVIDED_FAMILY
+  OTHERS
+}
+
+enum SpecialBenefits {
+  NONE
+  GAZETTED_WAR_WOUNDED_FREEDOM_FIGHTER
+  FEMALE
+  THIRD_GENDER
+  DISABLED_PERSON
+  AGED_65_OR_MORE
+}
+
+enum MinimumTax {
+  DHAKA_CHATTOGRAM_CITY_CORPORATION_AREA
+  OTHER_CITY_CORPORATION_AREA
+  OTHER_AREA
+}
+
+enum RepairCollection {
+  COMMERCIAL_PROPERTY
+  NON_COMMERCIAL
+  RESIDENTIAL_PROPERTY
+  MIXED_PROPERTY
+}
+
+enum NetWealthLastDate {
+  YES
+  NO_I_AM_A_NEW_TAXPAYER
+}
+
+enum IncomeFromEmployment {
+  YES
+  NO
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum EmploymentType {
+  GOVERNMENT
+  PRIVATE
+}
+
+enum TransportCCType {
+  LT_EQ_2500
+  GT_2500
+}
+
+model User {
+  id              String            @id @default(cuid())
+  name            String?
+  email           String?           @unique
+  phone           String?
+  emailVerified   DateTime?
+  image           String?
+  password        String?
+  role            Role              @default(USER)
+  accounts        Account[]
+  orders          Order[] // Add this line
+  savedTaxReturns SavedTaxReturns[]
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model IndividualTaxes {
+  id                                                String                  @id @default(cuid())
+  order                                             Order?
+  // related to form  fields
+  // Image 1
+  taxpayerName                                      String
+  nationalId                                        String
+  tin                                               String
+  circle                                            String
+  zone                                              String
+  assessmentYear                                    String
+  residentialStatus                                 ResidentialStatus
+  assesseeStatus                                    AssesseeStatus
+  specialBenefits                                   SpecialBenefits?
+  isParentOfDisabledPerson                          Boolean?
+  dateOfBirth                                       DateTime
+  spouseName                                        String?
+  spouseTin                                         String?
+  addressLine1                                      String
+  addressLine2                                      String?
+  telephone                                         String?
+  mobile                                            String
+  email                                             String
+  employerName                                      String?
+  businessName                                      String?
+  bin                                               String?
+  partnersMembersAssociation1                       String?
+  partnersMembersAssociation2                       String?
+  // Image 2
+  statementOfIncomeYearEndedOn                      DateTime
+  incomeFromEmployment                              String?
+  incomeFromRent                                    String?
+  incomeFromAgriculture                             String?
+  incomeFromBusiness                                String?
+  incomeFromCapitalGains                            String?
+  incomeFromFinancialAssets                         String?
+  incomeFromOtherSources                            String?
+  shareOfIncomeFromAOP                              String?
+  incomeOfMinor                                     String?
+  taxableIncomeFromAbroad                           String?
+  totalIncome                                       String?
+  totalAmountPayable                                String?
+  minimumTax                                        MinimumTax?
+  netWealthSurcharge                                String?
+  taxPayable                                        String?
+  environmentalSurcharge                            String?
+  totalSurcharge                                    String?
+  delayInterest                                     String?
+  grossTaxOnTaxableIncome                           String?
+  netTaxAfterRebate                                 String?
+  minimumTaxAmount                                  String?
+  // Image 3
+  taxDeductedOrCollected                            String?
+  advanceTaxPaid                                    String?
+  adjustmentOfTaxRefund                             String?
+  taxPaidWithThisReturn                             String?
+  totalTaxPaidAndAdjusted                           String?
+  excessPayment                                     String?
+  taxExemptedTaxFreeIncome                          String?
+  listOfDocumentsFurnishedWithThisReturn1           String?
+  listOfDocumentsFurnishedWithThisReturn2           String?
+  fatherOrHusband                                   String
+  placeOfSignature                                  String?
+  signature                                         String?
+  dateOfSignature                                   DateTime
+  // Image 4
+  isIncomeFromEmployment                            IncomeFromEmployment
+  typeOfEmployment                                  EmploymentType?
+  // Image 4 - Govt
+  // Foreign key IDs grouped together
+  basicPayGovtId                                    String?                 @unique
+  arrearPayGovtId                                   String?                 @unique
+  specialAllowanceGovtId                            String?                 @unique
+  houseRentAllowanceGovtId                          String?                 @unique
+  medicalAllowanceGovtId                            String?                 @unique
+  conveyanceAllowanceGovtId                         String?                 @unique
+  festivalAllowanceGovtId                           String?                 @unique
+  allowanceForSupportStaffGovtId                    String?                 @unique
+  leaveAllowanceGovtId                              String?                 @unique
+  honorariumRewardGovtId                            String?                 @unique
+  overtimeAllowanceGovtId                           String?                 @unique
+  banglaNoboborshoAllowancesGovtId                  String?                 @unique
+  interestAccruedProvidentFundGovtId                String?                 @unique
+  lumpGrantGovtId                                   String?                 @unique
+  gratuityGovtId                                    String?                 @unique
+  otherAllowanceGovtId                              String?                 @unique
+  totalGovtId                                       String?                 @unique
+  // Relations grouped together
+  basicPayGovt                                      GovtPayScale?           @relation("BasicPayGovt", fields: [basicPayGovtId], references: [id])
+  arrearPayGovt                                     GovtPayScale?           @relation("ArrearPayGovt", fields: [arrearPayGovtId], references: [id])
+  specialAllowanceGovt                              GovtPayScale?           @relation("SpecialAllowanceGovt", fields: [specialAllowanceGovtId], references: [id])
+  houseRentAllowanceGovt                            GovtPayScale?           @relation("HouseRentAllowanceGovt", fields: [houseRentAllowanceGovtId], references: [id])
+  medicalAllowanceGovt                              GovtPayScale?           @relation("MedicalAllowanceGovt", fields: [medicalAllowanceGovtId], references: [id])
+  conveyanceAllowanceGovt                           GovtPayScale?           @relation("ConveyanceAllowanceGovt", fields: [conveyanceAllowanceGovtId], references: [id])
+  festivalAllowanceGovt                             GovtPayScale?           @relation("FestivalAllowanceGovt", fields: [festivalAllowanceGovtId], references: [id])
+  allowanceForSupportStaffGovt                      GovtPayScale?           @relation("AllowanceForSupportStaffGovt", fields: [allowanceForSupportStaffGovtId], references: [id])
+  leaveAllowanceGovt                                GovtPayScale?           @relation("LeaveAllowanceGovt", fields: [leaveAllowanceGovtId], references: [id])
+  honorariumRewardGovt                              GovtPayScale?           @relation("HonorariumRewardGovt", fields: [honorariumRewardGovtId], references: [id])
+  overtimeAllowanceGovt                             GovtPayScale?           @relation("OvertimeAllowanceGovt", fields: [overtimeAllowanceGovtId], references: [id])
+  banglaNoboborshoAllowancesGovt                    GovtPayScale?           @relation("BanglaNoboborshoAllowancesGovt", fields: [banglaNoboborshoAllowancesGovtId], references: [id])
+  interestAccruedProvidentFundGovt                  GovtPayScale?           @relation("InterestAccruedProvidentFundGovt", fields: [interestAccruedProvidentFundGovtId], references: [id])
+  lumpGrantGovt                                     GovtPayScale?           @relation("LumpGrantGovt", fields: [lumpGrantGovtId], references: [id])
+  gratuityGovt                                      GovtPayScale?           @relation("GratuityGovt", fields: [gratuityGovtId], references: [id])
+  otherAllowanceGovt                                GovtPayScale?           @relation("OtherAllowanceGovt", fields: [otherAllowanceGovtId], references: [id])
+  totalGovt                                         GovtPayScale?           @relation("TotalGovt", fields: [totalGovtId], references: [id])
+  // Image 4 - Private
+  basicPayPrivate                                   String?
+  allowancesPrivate                                 String?
+  advanceArrearSalaryPrivate                        String?
+  gratuityAnnuityPensionOrSimilarBenefitPrivate     String?
+  perquisitesPrivate                                String?
+  receiptInLieuOfOrInAdditionToSalaryOrWagesPrivate String?
+  incomeFromEmployeeShareSchemePrivate              String?
+  accommodationFacilityPrivate                      String?
+  transportFacilityPrivate                          String?
+  transportFacilityPrivateCheck                     Boolean?
+  transportFacilityPrivateVehicleCC                 TransportCCType?
+  anyOtherFacilityProvidedByEmployerPrivate         String?
+  employerContributionToProvidentFundPrivate        String?
+  otherIncomePrivate                                String?
+  totalSalaryReceivedPrivate                        String?
+  exemptedAmountPrivate                             String?
+  totalIncomeFromSalaryPrivate                      String?
+  // Image 5
+  locationDescriptionOwnershipProportionOfProperty  String?
+  rentReceivedOrAnnualValue                         String?
+  advanceRentReceived                               String?
+  valueOfAnyBenefit                                 String?
+  adjustedAdvanceRent                               String?
+  vacancyAllowance                                  String?
+  totalRentValue                                    String?
+  repairCollectionProperty                          RepairCollection?
+  repairCollectionAmount                            String?
+  municipalOrLocalTax                               String?
+  landRevenue                                       String?
+  interestMortgageCapitalCharge                     String?
+  insurancePremiumPaid                              String?
+  otherAllowableDeduction                           String?
+  taxpayersSharePercentage                          String
+  taxpayersShareAmount                              String?
+  salesTurnoverReceiptAgriculture                   String?
+  grossProfitFromAgriculture                        String?
+  generalExpensesSellingExpenses                    String?
+  totalAdmissibleDeduction                          String?
+  netIncomeFromRent                                 String?
+  netProfitFromAgriculture                          String?
+  // Image 6
+  nameOfBusiness                                    String?
+  natureOfBusiness                                  String?
+  addressOfBusiness                                 String?
+  // Summary of income
+  salesTurnoverReceiptsBusiness                     String?
+  purchase                                          String?
+  grossProfitFromBusiness                           String?
+  generalAdministrativeSellingExpenses              String?
+  badDebtExpense                                    String?
+  netProfitFromBusinessIncome                       String?
+  // Balance sheet
+  cashInHandAtBank                                  String?
+  inventories                                       String?
+  fixedAssets                                       String?
+  otherAssets                                       String?
+  totalAssets                                       String?
+  openingCapital                                    String?
+  netProfitFromBusinessBalance                      String?
+  withdrawalsInTheIncomeYear                        String?
+  closingCapital                                    String?
+  liabilities                                       String?
+  totalCapitalsAndLiabilities                       String?
+  // Capital gains relations
+  incomeFromShareTransferListedCompanyId            String?                 @unique
+  incomeFromCapitalGain2Id                          String?                 @unique
+  incomeFromCapitalGain3Id                          String?                 @unique
+  incomeFromCapitalGain4Id                          String?                 @unique
+  incomeFromCapitalGain5Id                          String?                 @unique
+  incomeFromCapitalGainsTotalId                     String?                 @unique
+  incomeFromShareTransferListedCompany              IncomeFromCapitalGains? @relation("ListedCompany", fields: [incomeFromShareTransferListedCompanyId], references: [id])
+  incomeFromCapitalGain2                            IncomeFromCapitalGains? @relation("CapitalGain2", fields: [incomeFromCapitalGain2Id], references: [id])
+  incomeFromCapitalGain3                            IncomeFromCapitalGains? @relation("CapitalGain3", fields: [incomeFromCapitalGain3Id], references: [id])
+  incomeFromCapitalGain4                            IncomeFromCapitalGains? @relation("CapitalGain4", fields: [incomeFromCapitalGain4Id], references: [id])
+  incomeFromCapitalGain5                            IncomeFromCapitalGains? @relation("CapitalGain5", fields: [incomeFromCapitalGain5Id], references: [id])
+  incomeFromCapitalGainsTotal                       IncomeFromCapitalGains? @relation("GainsTotal", fields: [incomeFromCapitalGainsTotalId], references: [id])
+  // Image 7
+  // Foreign key IDs for Shonchoypatra
+  shonchoypatraId                                   String?                 @unique
+  profitFromShoychoyparta2Id                        String?                 @unique
+  profitFromShoychoyparta3Id                        String?                 @unique
+  profitFromShoychoyparta4Id                        String?                 @unique
+  profitFromShoychoyparta5Id                        String?                 @unique
+  profitFromShoychoyparta6Id                        String?                 @unique
+  profitFromShoychoyparta7Id                        String?                 @unique
+  profitFromShoychoyparta8Id                        String?                 @unique
+  profitFromShoychoyparta9Id                        String?                 @unique
+  profitFromShoychoyparta10Id                       String?                 @unique
+  profitFromShoychoypartaTotalId                    String?                 @unique
+  // Foreign key IDs for Securities
+  interestFromSecuritiesId                          String?                 @unique
+  profitInterestFromGovtSecurities2Id               String?                 @unique
+  profitInterestFromGovtSecurities3Id               String?                 @unique
+  profitInterestFromGovtSecurities4Id               String?                 @unique
+  profitInterestFromGovtSecurities5Id               String?                 @unique
+  profitInterestFromGovtSecurities6Id               String?                 @unique
+  profitInterestFromGovtSecurities7Id               String?                 @unique
+  profitInterestFromGovtSecurities8Id               String?                 @unique
+  profitInterestFromGovtSecurities9Id               String?                 @unique
+  profitInterestFromGovtSecurities10Id              String?                 @unique
+  profitInterestFromGovtSecuritiesTotalId           String?                 @unique
+  // Shonchoypatra Relations
+  shonchoyparta                                     FinancialAssets?        @relation("Shonchoypatra", fields: [shonchoypatraId], references: [id])
+  profitFromShoychoyparta2                          FinancialAssets?        @relation("ProfitFromShoychoyparta2", fields: [profitFromShoychoyparta2Id], references: [id])
+  profitFromShoychoyparta3                          FinancialAssets?        @relation("ProfitFromShoychoyparta3", fields: [profitFromShoychoyparta3Id], references: [id])
+  profitFromShoychoyparta4                          FinancialAssets?        @relation("ProfitFromShoychoyparta4", fields: [profitFromShoychoyparta4Id], references: [id])
+  profitFromShoychoyparta5                          FinancialAssets?        @relation("ProfitFromShoychoyparta5", fields: [profitFromShoychoyparta5Id], references: [id])
+  profitFromShoychoyparta6                          FinancialAssets?        @relation("ProfitFromShoychoyparta6", fields: [profitFromShoychoyparta6Id], references: [id])
+  profitFromShoychoyparta7                          FinancialAssets?        @relation("ProfitFromShoychoyparta7", fields: [profitFromShoychoyparta7Id], references: [id])
+  profitFromShoychoyparta8                          FinancialAssets?        @relation("ProfitFromShoychoyparta8", fields: [profitFromShoychoyparta8Id], references: [id])
+  profitFromShoychoyparta9                          FinancialAssets?        @relation("ProfitFromShoychoyparta9", fields: [profitFromShoychoyparta9Id], references: [id])
+  profitFromShoychoyparta10                         FinancialAssets?        @relation("ProfitFromShoychoyparta10", fields: [profitFromShoychoyparta10Id], references: [id])
+  profitFromShoychoypartaTotal                      FinancialAssets?        @relation("ProfitFromShoychoypartaTotal", fields: [profitFromShoychoypartaTotalId], references: [id])
+  // Securities Relations
+  interestFromSecurities                            FinancialAssets?        @relation("InterestFromSecurities", fields: [interestFromSecuritiesId], references: [id])
+  profitInterestFromGovtSecurities2                 FinancialAssets?        @relation("ProfitInterestFromGovtSecurities2", fields: [profitInterestFromGovtSecurities2Id], references: [id])
+  profitInterestFromGovtSecurities3                 FinancialAssets?        @relation("ProfitInterestFromGovtSecurities3", fields: [profitInterestFromGovtSecurities3Id], references: [id])
+  profitInterestFromGovtSecurities4                 FinancialAssets?        @relation("ProfitInterestFromGovtSecurities4", fields: [profitInterestFromGovtSecurities4Id], references: [id])
+  profitInterestFromGovtSecurities5                 FinancialAssets?        @relation("ProfitInterestFromGovtSecurities5", fields: [profitInterestFromGovtSecurities5Id], references: [id])
+  profitInterestFromGovtSecurities6                 FinancialAssets?        @relation("ProfitInterestFromGovtSecurities6", fields: [profitInterestFromGovtSecurities6Id], references: [id])
+  profitInterestFromGovtSecurities7                 FinancialAssets?        @relation("ProfitInterestFromGovtSecurities7", fields: [profitInterestFromGovtSecurities7Id], references: [id])
+  profitInterestFromGovtSecurities8                 FinancialAssets?        @relation("ProfitInterestFromGovtSecurities8", fields: [profitInterestFromGovtSecurities8Id], references: [id])
+  profitInterestFromGovtSecurities9                 FinancialAssets?        @relation("ProfitInterestFromGovtSecurities9", fields: [profitInterestFromGovtSecurities9Id], references: [id])
+  profitInterestFromGovtSecurities10                FinancialAssets?        @relation("ProfitInterestFromGovtSecurities10", fields: [profitInterestFromGovtSecurities10Id], references: [id])
+  profitInterestFromGovtSecuritiesTotal             FinancialAssets?        @relation("ProfitInterestFromGovtSecuritiesTotal", fields: [profitInterestFromGovtSecuritiesTotalId], references: [id])
+  // Image 8
+  lifeInsurancePremium                              String?
+  contributionToDeposit                             String?
+  investmentInGovernmentSecurities                  String?
+  investmentInSecuritiesStock                       String?
+  contributionToProvidentFund                       String?
+  selfAndEmployersContribution                      String?
+  contributionToSuperAnnuationFund                  String?
+  contributionToBenevolentFund                      String?
+  contributionToZakatFund                           String?
+  otherRebatableInvestmentContribution              String?
+  amountOfTaxRebate                                 String?
+  totalAllowableInvestmentContribution              String?
+  totalIncomeRebateTable                            String?
+  totalAllowableInvestmentRebateTable               String?
+  taka1000000                                       String?
+  // Image 9
+  expensesForFoodId                                 String?                 @unique
+  housingExpenseId                                  String?                 @unique
+  personalTransportationExpensesId                  String?                 @unique
+  utilityExpenseId                                  String?                 @unique
+  houseKeepingExpenseId                             String?                 @unique
+  humanitiesExpenseId                               String?                 @unique
+  educationExpensesId                               String?                 @unique
+  personalExpenseForLocalForeignTravelId            String?                 @unique
+  festivalExpenseId                                 String?                 @unique
+  taxDeductedCollectedAtSourceId                    String?                 @unique
+  interestPaidId                                    String?                 @unique
+  totalExpenseIndividualPersonId                    String?                 @unique
+  // Relations
+  expensesForFood                                   PersonalExpense?        @relation("ExpensesForFood", fields: [expensesForFoodId], references: [id])
+  housingExpense                                    PersonalExpense?        @relation("HousingExpense", fields: [housingExpenseId], references: [id])
+  personalTransportationExpenses                    PersonalExpense?        @relation("PersonalTransportationExpenses", fields: [personalTransportationExpensesId], references: [id])
+  utilityExpense                                    PersonalExpense?        @relation("UtilityExpense", fields: [utilityExpenseId], references: [id])
+  houseKeepingExpense                               PersonalExpense?        @relation("HouseKeepingExpense", fields: [houseKeepingExpenseId], references: [id])
+  humanitiesExpense                                 PersonalExpense?        @relation("HumanitiesExpense", fields: [humanitiesExpenseId], references: [id])
+  educationExpenses                                 PersonalExpense?        @relation("EducationExpenses", fields: [educationExpensesId], references: [id])
+  personalExpenseForLocalForeignTravel              PersonalExpense?        @relation("PersonalExpenseForLocalForeignTravel", fields: [personalExpenseForLocalForeignTravelId], references: [id])
+  festivalExpense                                   PersonalExpense?        @relation("FestivalExpense", fields: [festivalExpenseId], references: [id])
+  taxDeductedCollectedAtSource                      PersonalExpense?        @relation("TaxDeductedCollectedAtSource", fields: [taxDeductedCollectedAtSourceId], references: [id])
+  interestPaid                                      PersonalExpense?        @relation("InterestPaid", fields: [interestPaidId], references: [id])
+  totalExpenseIndividualPerson                      PersonalExpense?        @relation("TotalExpenseIndividualPerson", fields: [totalExpenseIndividualPersonId], references: [id])
+  // Image 10
+  // Net Wealth and Liabilities
+  netWealthLastDate                                 NetWealthLastDate?
+  netWealthLastDateAmount                           String?
+  giftExpense                                       String?
+  institutionalLiabilities                          String?
+  nonInstitutionalLiabilities                       String?
+  otherLiabilities                                  String?
+  lessBusinessLiabilities                           String?
+  // Directors Shareholding
+  directorsShareholdingCompanyName1                 String?
+  directorsShareholdingCompanyName2                 String?
+  directorsShareholdingCompanyName3                 String?
+  directorsShareholdingNoOfShare1                   String?
+  directorsShareholdingNoOfShare2                   String?
+  directorsShareholdingNoOfShare3                   String?
+  directorsShareholdingCompanyValue1                String?
+  directorsShareholdingCompanyValue2                String?
+  directorsShareholdingCompanyValue3                String?
+  // Partnership Firms
+  nameOfPartnershipFirm1                            String?
+  nameOfPartnershipFirm2                            String?
+  nameOfPartnershipFirm3                            String?
+  shareOfProfit1                                    String?
+  shareOfProfit2                                    String?
+  shareOfProfit3                                    String?
+  capitalContributed1                               String?
+  capitalContributed2                               String?
+  capitalContributed3                               String?
+  // Income and Fund
+  totalIncomeShownInTheReturn                       String?
+  taxExemptedIncomeAndAllowance                     String?
+  receiptOfGiftOtherReceipts                        String?
+  totalSourceOfFund                                 String?
+  sumOfSourceOfFundAndPreviousYearsNetWealth        String?
+  expenseRelatingToLifestyle                        String?
+  totalExpensesAndLoss                              String?
+  netWealthAtTheLastDateOfThisFinancialYear         String?
+  totalLiabilitiesOutsideBusiness                   String?
+  grossWealth                                       String?
+  businessCapital                                   String?
+  directorsShareholdingsInTheCompanies              String?
+  businessCapitalOfPartnershipFirm                  String?
+  // Image 11
+  // Agricultural and Non-Agricultural Properties
+  nonAgriculturalPropertyLandHouseProperty          String?
+  nonAgriculturalLocationDescription1               String?
+  nonAgriculturalLocationDescription2               String?
+  nonAgriculturalLocationDescription3               String?
+  nonAgriculturalLocationDescription4               String?
+  nonAgriculturalLocationDescription5               String?
+  nonAgriculturalValue1                             String?
+  nonAgriculturalValue2                             String?
+  nonAgriculturalValue3                             String?
+  nonAgriculturalValue4                             String?
+  nonAgriculturalValue5                             String?
+  agriculturalLocationAndDescription1               String?
+  agriculturalLocationAndDescription2               String?
+  agriculturalLocationAndDescription3               String?
+  agriculturalLocationValue1                        String?
+  agriculturalLocationValue2                        String?
+  agriculturalLocationValue3                        String?
+  // Financial Assets
+  shareDebentureUnitCertificate                     String?
+  sanchayapatraSavingsCertificate                   String?
+  depositPensionScheme                              String?
+  loanGivenToOthersName                             String?
+  loanGiventoOthersNid                              String?
+  loansGivenToOthers                                String?
+  savingDeposit                                     String?
+  providentFund                                     String?
+  otherInvestmentDesc                               String?
+  otherInvestment                                   String?
+  // Motor Vehicles and Assets
+  typeOfMotorVehicle1                               String?
+  typeOfMotorVehicle2                               String?
+  registrationNumber1                               String?
+  registrationNumber2                               String?
+  motorValue1                                       String?
+  motorValue2                                       String?
+  ornamentsDesc                                     String?
+  ornamentsValue                                    String?
+  furnitureAndElectronic                            String?
+  othersAssetsDesc                                  String?
+  othersAssetsValue                                 String?
+  bankBalance                                       String?
+  cashInHand                                        String?
+  otherFundDesc                                     String?
+  otherFundOutsideBusiness                          String?
+  assetOutsideBangladesh                            String?
+  agriculturalProperty                              String?
+  totalFinancialAssets                              String?
+  motorVehiclesTotal                                String?
+  totalAssetslocatedInBangladesh                    String?
+  totalCashInHandsAndFundOutsideBusiness            String?
+  totalAssetsInBangladeshAndOutsideBangladesh       String?
+  // Totals
+  totalIncomeShown                                  String?
+  totalTaxPaid                                      String?
+  // Dates
+  createdAt                                         DateTime                @default(now())
+  updatedAt                                         DateTime                @updatedAt
+}
+
+model GovtPayScale {
+  id                                         String           @id @default(cuid())
+  amount                                     String?
+  taxExempted                                String?
+  taxable                                    String?
+  basicPayGovtEmployment                     IndividualTaxes? @relation("BasicPayGovt")
+  arrearPayGovtEmployment                    IndividualTaxes? @relation("ArrearPayGovt")
+  specialAllowanceGovtEmployment             IndividualTaxes? @relation("SpecialAllowanceGovt")
+  houseRentAllowanceGovtEmployment           IndividualTaxes? @relation("HouseRentAllowanceGovt")
+  medicalAllowanceGovtEmployment             IndividualTaxes? @relation("MedicalAllowanceGovt")
+  conveyanceAllowanceGovtEmployment          IndividualTaxes? @relation("ConveyanceAllowanceGovt")
+  festivalAllowanceGovtEmployment            IndividualTaxes? @relation("FestivalAllowanceGovt")
+  allowanceForSupportStaffGovtEmployment     IndividualTaxes? @relation("AllowanceForSupportStaffGovt")
+  leaveAllowanceGovtEmployment               IndividualTaxes? @relation("LeaveAllowanceGovt")
+  honorariumRewardGovtEmployment             IndividualTaxes? @relation("HonorariumRewardGovt")
+  overtimeAllowanceGovtEmployment            IndividualTaxes? @relation("OvertimeAllowanceGovt")
+  banglaNoboborshoAllowancesGovtEmployment   IndividualTaxes? @relation("BanglaNoboborshoAllowancesGovt")
+  interestAccruedProvidentFundGovtEmployment IndividualTaxes? @relation("InterestAccruedProvidentFundGovt")
+  lumpGrantGovtEmployment                    IndividualTaxes? @relation("LumpGrantGovt")
+  gratuityGovtEmployment                     IndividualTaxes? @relation("GratuityGovt")
+  otherAllowanceGovtEmployment               IndividualTaxes? @relation("OtherAllowanceGovt")
+  totalGovtEmployment                        IndividualTaxes? @relation("TotalGovt")
+}
+
+model IncomeFromCapitalGains {
+  id                         String           @id @default(cuid())
+  description                String?
+  capitalGain                String?
+  exemptedAmount             String?
+  taxableAmount              String?
+  // Relations
+  shareTransferListedCompany IndividualTaxes? @relation("ListedCompany")
+  capitalGain2Details        IndividualTaxes? @relation("CapitalGain2")
+  capitalGain3Details        IndividualTaxes? @relation("CapitalGain3")
+  capitalGain4Details        IndividualTaxes? @relation("CapitalGain4")
+  capitalGain5Details        IndividualTaxes? @relation("CapitalGain5")
+  capitalGainsTotal          IndividualTaxes? @relation("GainsTotal")
+}
+
+model FinancialAssets {
+  id                                           String           @id @default(cuid())
+  description                                  String?
+  balance                                      String?
+  interestProfit                               String?
+  sourceTax                                    String?
+  // Shonchoypatra relations
+  shonchoypatraDetails                         IndividualTaxes? @relation("Shonchoypatra")
+  profitFromShoychoyparta2Details              IndividualTaxes? @relation("ProfitFromShoychoyparta2")
+  profitFromShoychoyparta3Details              IndividualTaxes? @relation("ProfitFromShoychoyparta3")
+  profitFromShoychoyparta4Details              IndividualTaxes? @relation("ProfitFromShoychoyparta4")
+  profitFromShoychoyparta5Details              IndividualTaxes? @relation("ProfitFromShoychoyparta5")
+  profitFromShoychoyparta6Details              IndividualTaxes? @relation("ProfitFromShoychoyparta6")
+  profitFromShoychoyparta7Details              IndividualTaxes? @relation("ProfitFromShoychoyparta7")
+  profitFromShoychoyparta8Details              IndividualTaxes? @relation("ProfitFromShoychoyparta8")
+  profitFromShoychoyparta9Details              IndividualTaxes? @relation("ProfitFromShoychoyparta9")
+  profitFromShoychoyparta10Details             IndividualTaxes? @relation("ProfitFromShoychoyparta10")
+  profitFromShoychoypartaTotalDetails          IndividualTaxes? @relation("ProfitFromShoychoypartaTotal")
+  // Securities relations
+  interestFromSecuritiesDetails                IndividualTaxes? @relation("InterestFromSecurities")
+  profitInterestFromGovtSecurities2Details     IndividualTaxes? @relation("ProfitInterestFromGovtSecurities2")
+  profitInterestFromGovtSecurities3Details     IndividualTaxes? @relation("ProfitInterestFromGovtSecurities3")
+  profitInterestFromGovtSecurities4Details     IndividualTaxes? @relation("ProfitInterestFromGovtSecurities4")
+  profitInterestFromGovtSecurities5Details     IndividualTaxes? @relation("ProfitInterestFromGovtSecurities5")
+  profitInterestFromGovtSecurities6Details     IndividualTaxes? @relation("ProfitInterestFromGovtSecurities6")
+  profitInterestFromGovtSecurities7Details     IndividualTaxes? @relation("ProfitInterestFromGovtSecurities7")
+  profitInterestFromGovtSecurities8Details     IndividualTaxes? @relation("ProfitInterestFromGovtSecurities8")
+  profitInterestFromGovtSecurities9Details     IndividualTaxes? @relation("ProfitInterestFromGovtSecurities9")
+  profitInterestFromGovtSecurities10Details    IndividualTaxes? @relation("ProfitInterestFromGovtSecurities10")
+  profitInterestFromGovtSecuritiesTotalDetails IndividualTaxes? @relation("ProfitInterestFromGovtSecuritiesTotal")
+}
+
+model PersonalExpense {
+  id      String  @id @default(cuid())
+  amount  String?
+  comment String?
+
+  // Relations to IndividualTaxes
+  expensesForFoodDetails                      IndividualTaxes? @relation("ExpensesForFood")
+  housingExpenseDetails                       IndividualTaxes? @relation("HousingExpense")
+  personalTransportationExpensesDetails       IndividualTaxes? @relation("PersonalTransportationExpenses")
+  utilityExpenseDetails                       IndividualTaxes? @relation("UtilityExpense")
+  houseKeepingExpenseDetails                  IndividualTaxes? @relation("HouseKeepingExpense")
+  humanitiesExpenseDetails                    IndividualTaxes? @relation("HumanitiesExpense")
+  educationExpensesDetails                    IndividualTaxes? @relation("EducationExpenses")
+  personalExpenseForLocalForeignTravelDetails IndividualTaxes? @relation("PersonalExpenseForLocalForeignTravel")
+  festivalExpenseDetails                      IndividualTaxes? @relation("FestivalExpense")
+  taxDeductedCollectedAtSourceDetails         IndividualTaxes? @relation("TaxDeductedCollectedAtSource")
+  interestPaidDetails                         IndividualTaxes? @relation("InterestPaid")
+  totalExpenseIndividualPersonDetails         IndividualTaxes? @relation("TotalExpenseIndividualPerson")
+}
+
+model SavedTaxReturns {
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  taxData           Json
+  completionPercent Float    @default(0)
+  lastEditedField   String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([userId])
+}
+
+enum PaymentMethod {
+  BKASH
+  NAGAD
+  UPAY
+  SURECASH
+  MKASH
+  ROCKET
+  BANK_TRANSFER
+  OTHERS
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  CANCELLED
+  EXPIRED
+}
+
+model Order {
+  id                String           @id @default(cuid())
+  invoiceId         String           @unique
+  userId            String
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  individualTaxesId String?          @unique
+  individualTaxes   IndividualTaxes? @relation(fields: [individualTaxesId], references: [id], onDelete: Cascade)
+  amount            Float?
+  paymentMethod     PaymentMethod?
+  paymentStatus     PaymentStatus    @default(PENDING)
+  transactionID     String?
+  phoneNumberUsed   String?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+}
